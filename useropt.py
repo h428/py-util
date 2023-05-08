@@ -85,13 +85,15 @@ def main():
     group.add_argument("-c", "--create", action="store_true", help="创建用户")
     group.add_argument("-d", "--delete", action="store_true", help="删除用户")
     group.add_argument("-r", "--restore", action="store_true", help="恢复用户")
+    group.add_argument("-l", "--link", action="store_true", help="创建链接")
 
     exist_c = "-c" in sys.argv or "--create" in sys.argv
     exist_d = "-d" in sys.argv or "--delete" in sys.argv
     exist_r = "-r" in sys.argv or "--restore" in sys.argv
+    exist_l = "-l" in sys.argv or "--link" in sys.argv
 
     parser.add_argument("-u", "--username", required=exist_c or exist_d, help="用户名")
-    parser.add_argument("-f", "--folder", required=exist_c or exist_r, help="存放用户数据的目录")
+    parser.add_argument("-f", "--folder", required=exist_c or exist_r or exist_l, help="存放用户数据的目录")
     parser.add_argument("-p", "--public_file", help="公钥文件路径")
 
     args = parser.parse_args()
@@ -199,6 +201,32 @@ def main():
         if user_exists(username):
             user_del_cmd = f"sudo userdel {username}"
             assert 0 == os.system(user_del_cmd), "删除用户失败，请手动删除"
+
+    if args.link:
+        print("本次创建链接")
+        user_data_path = args.folder
+
+        # 读取擦混入的 user_data_path
+        if not os.path.exists(user_data_path):
+            print(f"路径 {user_data_path} 不存在，无法恢复")
+
+        username = os.path.basename(user_data_path)  # 取最后一级作为用户名
+        home_path = os.path.join(home_folder, username)
+        print("username", username)
+        print("home_path", home_path)
+
+        # 目录已存在，询问是否覆盖
+        print("os.path.exists(home_path) ", os.path.islink(home_path))
+        if os.path.islink(home_path):
+            line = input(f"路径 {home_path} 已存在，是否覆盖？(yes/no)")
+            if not line.startswith("y"):
+                return
+            print(f"移除原有软链接 {home_path}")
+            os.unlink(home_path)
+
+        # 创建链接
+        print(f"创建新软链接 {home_path} -> {user_data_path}")
+        execution(create_link_cmd.format(user_data_path=user_data_path, username=username))  # 创建软链接
 
 
 if __name__ == '__main__':
