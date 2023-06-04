@@ -1,4 +1,4 @@
-from cmd import nvidia_smi
+from cmd import nvidia_smi, kill_process_by_pid
 from formater import format_process_list, format_process
 
 
@@ -6,9 +6,9 @@ def main():
 
     lines = [
         "请输入指令：",
-        "1. 按 GPU 查询",
-        "2. 按 CPU 查询",
-        "-. kill id",
+        "1. 按 CPU 查询",
+        "2. 按 GPU 查询",
+        "-. kill id, cmd id",
     ]
     text = "\n".join(lines) + "\n"
 
@@ -38,7 +38,7 @@ def main():
             confirm = input(f"{format_process(process, no)}\n确认杀死上述进程？(yes) ")
 
             if confirm.startswith("y"):
-                print("杀死进程")
+                kill_process_by_pid(process['pid'])
             continue
 
         print("非法指令...")

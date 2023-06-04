@@ -11,11 +11,13 @@ def get_process_info(pid):
     username = process.username()
     cpu_percent = process.cpu_percent(interval=0.1)
     memory_info = process.memory_info()
+    uptime = process.create_time()
+    cmd = process.cmdline()
 
     # 获取内存占用的字节数，并转换为MB
     memory_usage = memory_info.rss / 1024 / 1024
 
-    return username, cpu_percent, memory_usage
+    return username, cpu_percent, memory_usage, uptime, cmd
 
 def parse_nvidia_smi_output(output):
     gpu_pattern = r"(\d+)MiB\s+/\s+(\d+)MiB\s+\|\s+(\d+)%"
@@ -33,7 +35,7 @@ def parse_nvidia_smi_output(output):
         pid = int(pid)
         gpu_memory = float(gpu_memory)
         gpu_used = gpu_used_list[gpu_id]
-        user, cpu_used, memory = get_process_info(pid)
+        user, cpu_used, memory, uptime, cmd = get_process_info(pid)
         process_list.append({
             'pid': pid,
             'user': user,
@@ -42,7 +44,8 @@ def parse_nvidia_smi_output(output):
             'gpu_id': gpu_id,
             'gpu_used': gpu_used,
             'gpu_memory': gpu_memory,
-            'process_name': process_name,
+            'uptime': uptime,
+            'cmd': cmd
         })
 
     return process_list
@@ -52,6 +55,9 @@ def nvidia_smi():
     process_list = parse_nvidia_smi_output(output)
     return process_list
 
+
+def kill_process_by_pid(pid):
+    os.system(f"sudo kill -9 {pid}")
 
 if __name__ == "__main__":
     process_list = nvidia_smi()
