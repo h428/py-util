@@ -1,45 +1,78 @@
 import time
 
-def format_memory(memory):
-    if memory < 1024:
-        return f"{memory:9.2f}M"
+format_width_config = {
+    'idx': 2,
+    'pid': 8,
+    'name': 10,
+    'user': 8,
+    'status': 10,
+    'cpu': 8,
+    'memory': 10,
+    'gid': 6,
+    'gpu': 8,
+    'create_time': 22,
+    'run_time': 10,
+}
+
+def format_memory(memory_mb):
+    line = ""
+    if memory_mb < 1024:
+        line = f"{memory_mb}M"
     
-    m = memory / 1024
-    return f"{m:9.2f}G"
+    m = memory_mb / 1024
+    line = f"{m:.2f}G"
+    return line.rjust(format_width_config["memory"])
 
 
-def format_process(process_item, idx):
-    pid = process_item['pid']
-    user = process_item['user']
-    cpu_used = process_item['cpu_used']
-    memory = process_item['memory']
-    gpu_id = process_item['gpu_id']
-    gpu_used = process_item['gpu_used']
-    gpu_memory = process_item['gpu_memory']
-    gpu_info = f"{gpu_id}/{gpu_used}"
-    uptime = process_item['uptime']
-    run_time = time.time() - uptime
-    return f"{idx:2d}{pid:8d}{user.rjust(6)}{cpu_used:10.2f}{format_memory(memory)}{gpu_info.rjust(10)}{format_memory(gpu_memory)}{format_uptime(run_time).rjust(10)}"
+def format_runtime(create_time):
 
+    run_time = time.time() - create_time
 
-def format_uptime(num):
-    if num < 60:
-        return f"{num:.2f} s"
+    if run_time < 60:
+        return f"{run_time:.2f} s"
     
-    num = num / 60
-    if num < 60:
-        return f"{num:.2f} m"
+    run_time = run_time / 60
+    if run_time < 60:
+        return f"{run_time:.2f} m"
     
-    num = num / 60
-    if num < 24:
-        return f"{num:.2f} h"
+    run_time = run_time / 60
+    if run_time < 24:
+        return f"{run_time:.2f} h"
     
-    return f"{num / 24:.2f} d"
+    return f"{run_time / 24:.2f} d"
+
+def format_process(process, idx):
+    idx = str(idx).rjust(format_width_config['idx'])
+    pid = str(process.pid).rjust(format_width_config['pid'])
+    name = str(process.name).rjust(format_width_config['name'])
+    user = str(process.user).rjust(format_width_config['user'])
+    status = str(process.status).rjust(format_width_config['status'])
+    cpu_usage = (str(process.cpu_usage) + '%').rjust(format_width_config['cpu'])
+    memory = format_memory(process.memory_mb)
+    gpu_id = str(process.gpu_id).rjust(format_width_config['gid'])
+    gpu_usage = str(str(process.gpu_usage) + '%').rjust(format_width_config['gpu'])
+    gpu_mem = format_memory(process.gpu_mb)
+    create_time = process.format_time.rjust(format_width_config['create_time'])
+    run_time = format_runtime(process.create_time).rjust(format_width_config['run_time'])
+    return f"{idx}{pid}{name}{status}{user}{cpu_usage}{memory}{gpu_id}{gpu_usage}{gpu_mem}{create_time}{run_time}"
 
 
 def format_process_list(process_list):
     print()
-    print(f"{'-'.rjust(2)}{'pid'.rjust(8)}{'user'.rjust(6)}{'cpu used'.rjust(10)}{'memory'.rjust(10)}{'gpu used'.rjust(10)}{'gpu mem'.rjust(10)}{'run time'.rjust(10)}")
+    # 标题对齐
+    idx = '-'.rjust(format_width_config['idx'])
+    pid = 'pid'.rjust(format_width_config['pid'])
+    name = 'name'.rjust(format_width_config['name'])
+    user = 'user'.rjust(format_width_config['user'])
+    status = 'status'.rjust(format_width_config['status'])
+    cpu_usage = 'cpu'.rjust(format_width_config['cpu'])
+    memory = 'memory'.rjust(format_width_config['memory'])
+    gpu_id = 'gid'.rjust(format_width_config['gid'])
+    gpu_usage = 'gpu'.rjust(format_width_config['gpu'])
+    gpu_mem = 'gpu mem'.rjust(format_width_config['memory'])
+    create_time = 'create time'.rjust(format_width_config['create_time'])
+    run_time = 'run time'.rjust(format_width_config['run_time'])
+    print(f"{idx}{pid}{name}{status}{user}{cpu_usage}{memory}{gpu_id}{gpu_usage}{gpu_mem}{create_time}{run_time}")
     for idx, process in enumerate(process_list):
         print(format_process(process, idx))
     print()

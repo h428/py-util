@@ -1,4 +1,5 @@
-from cmd import nvidia_smi, kill_process_by_pid
+from process import Process
+from cmds import kill_process_by_pid
 from formater import format_process_list, format_process
 
 
@@ -6,7 +7,7 @@ def main():
 
     lines = [
         "请输入指令：",
-        "1. 按 CPU 查询",
+        "1. 按 MEM 查询",
         "2. 按 GPU 查询",
         "-. kill id, cmd id",
     ]
@@ -21,10 +22,12 @@ def main():
             break
 
         if line.startswith("1"):
+            process_list = Process.get_process_list_by_memory()
+            format_process_list(process_list)
             continue
 
         if line.startswith("2"):
-            process_list = nvidia_smi()
+            process_list = Process.get_process_list_by_gpu()
             format_process_list(process_list)
             continue
 
